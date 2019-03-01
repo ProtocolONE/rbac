@@ -3,7 +3,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Build Status](https://travis-ci.org/ProtocolONE/rbac.svg?branch=master)](https://travis-ci.org/ProtocolONE/rbac) 
-[![Go Report Card](https://goreportcard.com/ProtocolOne/rbac)](https://goreportcard.com/report/github.com/ProtocolOne/rbac) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/ProtocolOne/rbac)](https://goreportcard.com/report/github.com/ProtocolOne/rbac)
 [![codecov](https://codecov.io/gh/ProtocolONE/rbac/branch/master/graph/badge.svg)](https://codecov.io/gh/ProtocolONE/rbac) 
 [![GoDoc](https://godoc.org/github.com/ProtocolOne/rbac?status.svg)](http://godoc.org/github.com/ProtocolOne/rbac) 
 

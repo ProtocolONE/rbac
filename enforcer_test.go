@@ -104,6 +104,34 @@ func TestEnforcer_AddRole(t *testing.T) {
 	testEnforceSync(t, enf, "brad", "vendor", "posts", "1", "alise", "read", true)
 }
 
+func TestEnforcer_RemoveRole(t *testing.T) {
+	enf := NewEnforcer()
+
+	role := Role{"stan", "admin", "vendor", "alise", []string{"50"}}
+
+	enf.AddPolicy(Policy{"admin", "vendor", "game", "*", "any", "allow"})
+	enf.AddRole(role)
+
+	testEnforceSync(t, enf, "stan", "vendor", "game", "50", "alise", "read", true)
+	assert.True(t, enf.RemoveRole(role))
+	assert.False(t, enf.RemoveRole(role))
+
+	testEnforceSync(t, enf, "stan", "vendor", "game", "50", "alise", "read", false)
+}
+
+func TestEnforcer_DeleteUser(t *testing.T) {
+	enf := NewEnforcer()
+	enf.AddPolicy(Policy{"admin", "vendor", "game", "*", "any", "allow"})
+	enf.AddRole(Role{"stan", "admin", "vendor", "alise", []string{"50"}})
+
+	assert.True(t, enf.DeleteUser("stan"))
+	assert.False(t, enf.DeleteUser("stan"))
+
+	testEnforceSync(t, enf, "stan", "vendor", "game", "50", "alise", "read", false)
+	testGetRoleForUser(t, enf, []string{}, "stan", "vendor")
+	testGetUsersForRole(t, enf, []string{}, "admin", "vendor")
+}
+
 func TestEnforcer_EnforceWithPermissions(t *testing.T) {
 	a := fileadapter.NewAdapter("./conf/restrict_policy.csv")
 	enf := NewEnforcer(a)

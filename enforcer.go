@@ -23,6 +23,9 @@ const (
 	maxHierarchyLevel    = 3
 )
 
+// CustomFunction used to add custom functions to match.
+type CustomFunction func(args ...interface{}) (interface{}, error)
+
 // Enforcer. By default role modelText in Qilin role manager works with RBAC with domains for all users.
 // We also uses elements of ABAC to check specific policy rules for resources and users.
 type Enforcer struct {
@@ -99,6 +102,8 @@ func NewEnforcer(params ...interface{}) *Enforcer {
 			return rm
 		case persist.Adapter:
 			rm.createEnforcer(m, p0)
+		case model.Model:
+			rm.createEnforcer(m, nil)
 		default:
 			panic("Unknown parameter type for Enforcer.")
 		}
@@ -148,6 +153,11 @@ func (rm *Enforcer) createEnforcer(m model.Model, a persist.Adapter) {
 	rm.enforcer.AddFunction("has_access_to_resource", rm.hasAccessToResource)
 	rm.enforcer.AddFunction("matchKeys", MatchKeysFunc)
 	rm.enforcer.AddFunction("bothSideMatchKeys", BothSideMatchKeysFunc)
+}
+
+// AddFunction adds a customized function.
+func (rm *Enforcer) AddFunction(name string, function CustomFunction) {
+	rm.enforcer.AddFunction(name, function)
 }
 
 // Enforce decides whether a "subject" in "domain" can access a "resource" with the operation "action",
@@ -209,6 +219,22 @@ func (rm *Enforcer) AddRole(rr Role) bool {
 	}
 
 	return rm.enforcer.AddRoleForUserInDomain(rr.User, rr.Role, rr.Domain)
+}
+
+// RemoveRole deletes a role for a user inside a domain.
+// Returns false if the user does not have the role (aka not affected).
+func (rm *Enforcer) RemoveRole(rr Role) bool {
+	for _, r := range rr.RestrictedResourceId {
+		rm.RemoveRestrictionFromUser(rr.User, &Restriction{rr.Owner, rr.Role, r})
+	}
+	return rm.enforcer.DeleteRoleForUserInDomain(rr.User, rr.Role, rr.Domain)
+}
+
+// DeleteUser deletes a user.
+// Returns false if the user does not exist (aka not affected).
+func (rm *Enforcer) DeleteUser(user string) bool {
+	rm.enforcer.RemoveFilteredNamedGroupingPolicy("g2", 0, user)
+	return rm.enforcer.RemoveFilteredGroupingPolicy(0, user)
 }
 
 // AddRestrictionToUser add the resource identity to `g2` grouping policy. This used to

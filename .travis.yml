@@ -1,0 +1,14 @@
+language: go
+sudo: false
+go:
+- 1.11.x
+env:
+- GO111MODULE=on
+install: true
+script:
+- go test ./... -coverprofile=coverage.out -covermode=atomic
+after_success:
+- bash <(curl -s https://codecov.io/bash)
+notifications:
+  slack:
+    secure: hkwo7KWgmcDt/RT6elI+ff6pqmyByFvgcYnXbaddU/WxujKi4f24QyoN1yf7GQEyva80D2qM5kfO0YyGp5ATF70bsg/uMwupsT74zDe2xrN0MVJdiZ8xCU7PmyrdNtaiK1R8D4Th3beohGsfiV6uMWPs+d5ZqVWTua3JgPM2Gr8pSsYWt0x9AfMREgnqrlP7qaakiDQnTRuYvaZf2B1FezmBOQ2AL87a77Sxo0tqL8HuBeBzj/S7TNIYlpC9iKJf0AysL2Ktt5G60tD/7pc934PkMYN/bWAXx2Rr9nyGOHC6e0S1c9Jm9X4BgbelgsfZUb5Yp6z4mQ+KhNTvCO9MhXKUYhZVG5sH8xQScd2JpZUMGVn1sONyWQTUZ1r9GXrAtFHj8Jf62FZJhELVZtYwBXWa5hkGH9HEkDVU6sC8vHLBzCzvAAULiquycvTNeooi/0eXgGuRco9+EODAPwuBQ6KuffJx+r55BlP3SOsAJbclhAfWioTCYHSQVQLYw5xlVMk3T0FyPDoJQI1jJZWTiTFQxrTWROjWdC/mZOr2PhywyMSRFH2/UXNJ+sN7GybeGLT2CsR8DczfcmL/eeYDqYCtDQqh/rCI1ST1fkSdZKRYT/WQpIRrtT1pYSoPuZW70I5+mwf5HRabLvcQRXeQ1D8j9sLSxjUgLzKFx8eRmOo=

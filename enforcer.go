@@ -170,6 +170,18 @@ func (rm *Enforcer) AddPolicy(p Policy) bool {
 	)
 }
 
+// RemovePolicy removes an authorization rule from the current policy.
+func (rm *Enforcer) RemovePolicy(p Policy) bool {
+	return rm.enforcer.RemovePolicy(
+		p.Role,
+		p.Domain,
+		p.ResourceType,
+		p.ResourceId,
+		p.Action,
+		p.Effect,
+	)
+}
+
 // LinkRoles adds a role inheritance rule to the current policy in domain.
 // If the rule already exists, the function returns false and the rule will not be added.
 // Otherwise the function returns true by adding the new rule.

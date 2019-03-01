@@ -30,6 +30,21 @@ func TestEnforcer_AddPolicy(t *testing.T) {
 	testEnforceSync(t, enf, "brad", "vendor", "events", "1", "alise", "read", true)
 }
 
+func TestEnforcer_RemovePolicy(t *testing.T) {
+	enf := NewEnforcer()
+
+	policy := Policy{"admin", "vendor", "game", "*", "any", "allow"}
+
+	enf.AddPolicy(policy)
+	enf.AddRole(Role{"stan", "admin", "vendor", "alise", nil})
+
+	testEnforceSync(t, enf, "stan", "vendor", "game", "1", "alise", "read", true)
+	assert.True(t, enf.RemovePolicy(policy))
+	assert.False(t, enf.RemovePolicy(policy))
+
+	testEnforceSync(t, enf, "stan", "vendor", "game", "1", "alise", "read", false)
+}
+
 func TestEnforcer_LinkRoles(t *testing.T) {
 	enf := NewEnforcer()
 	enf.AddPolicy(Policy{"admin", "vendor", "game", "*", "any", "allow"})

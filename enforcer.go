@@ -65,7 +65,7 @@ type Policy struct {
 // Restriction define one permission rule.
 type Restriction struct {
 	Owner string `json:"owner"`
-	Role  string `json:"rols"`
+	Role  string `json:"role"`
 	UUID  string `json:"uuid"`
 }
 

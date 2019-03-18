@@ -269,28 +269,7 @@ func (rm *Enforcer) GetUsersForRole(role string, domain string, filters ...inter
 		return users
 	}
 
-	var restrictionFilter *Restriction
-	switch filters[0].(type) {
-	case *Restriction:
-		restrictionFilter = filters[0].(*Restriction)
-	case string:
-		restrictionFilter = &Restriction{Owner: filters[0].(string)}
-		if len(filters) >= 2 {
-			switch filters[1].(type) {
-			case string:
-				restrictionFilter.Role = filters[1].(string)
-			}
-		}
-
-		if len(filters) == 3 {
-			switch filters[2].(type) {
-			case string:
-				restrictionFilter.UUID = filters[2].(string)
-			}
-		}
-	default:
-		panic(fmt.Sprintf("Invalid arguments in filter %+v", filters))
-	}
+	restrictionFilter := rm.buildRestrictionFilter(filters...)
 
 	var filteredUsers []string
 	for _, u := range users {
@@ -301,22 +280,54 @@ func (rm *Enforcer) GetUsersForRole(role string, domain string, filters ...inter
 		}
 
 		for _, r := range userRestrictions {
-			if restrictionFilter.UUID != "" && restrictionFilter.UUID != r.UUID {
-				continue
+			if rm.passRestrictionFilter(r, restrictionFilter) {
+				filteredUsers = append(filteredUsers, u)
 			}
-
-			if restrictionFilter.Role != "" && restrictionFilter.Role != r.Role {
-				continue
-			}
-
-			if restrictionFilter.Owner != r.Owner {
-				continue
-			}
-			filteredUsers = append(filteredUsers, u)
 		}
 	}
 
 	return filteredUsers
+}
+func (rm *Enforcer) passRestrictionFilter(r *Restriction, restrictionFilter *Restriction) bool {
+	if restrictionFilter.UUID != "" && restrictionFilter.UUID != r.UUID {
+		return false
+	}
+
+	if restrictionFilter.Role != "" && restrictionFilter.Role != r.Role {
+		return false
+	}
+
+	if restrictionFilter.Owner != r.Owner {
+		return false
+	}
+	return true
+}
+func (rm *Enforcer) buildRestrictionFilter(filters ...interface{}) (restrictionFilter *Restriction) {
+	if len(filters) > 0 {
+		switch filters[0].(type) {
+		case *Restriction:
+			restrictionFilter = filters[0].(*Restriction)
+		case string:
+			restrictionFilter = &Restriction{Owner: filters[0].(string)}
+			if len(filters) >= 2 {
+				switch filters[1].(type) {
+				case string:
+					restrictionFilter.Role = filters[1].(string)
+				}
+			}
+
+			if len(filters) == 3 {
+				switch filters[2].(type) {
+				case string:
+					restrictionFilter.UUID = filters[2].(string)
+				}
+			}
+		default:
+			panic(fmt.Sprintf("Invalid arguments in filter %+v", filters))
+		}
+	}
+
+	return
 }
 
 // GetRolesForUser gets the roles that a user has inside a domain.
@@ -325,7 +336,7 @@ func (rm *Enforcer) GetRolesForUser(user, domain string) []string {
 }
 
 // GetPermissionsForUser returns all the allow and deny permissions for a user
-func (rm *Enforcer) GetPermissionsForUser(user, domain string) *UserPermissions {
+func (rm *Enforcer) GetPermissionsForUser(user, domain string, filters ...interface{}) *UserPermissions {
 	up := UserPermissions{
 		User:   user,
 		Domain: domain,
@@ -335,9 +346,13 @@ func (rm *Enforcer) GetPermissionsForUser(user, domain string) *UserPermissions 
 	subjects = append(subjects, user)
 
 	up.Permissions = rm.buildPermissions(subjects, domain)
+	restrictionFilter := rm.buildRestrictionFilter(filters...)
 
 	unmatchedPerms := make(map[string]bool)
 	for _, r := range rm.GetUserRestrictions(user) {
+		if !rm.passRestrictionFilter(r, restrictionFilter) {
+			continue
+		}
 		for _, p := range up.Permissions {
 			if rm.matchRestriction(r.GetRaw(), r.Owner, p.Role, p.Domain, SkipResourceId, SkipResourceId) {
 				p.Restrictions = append(p.Restrictions, r)

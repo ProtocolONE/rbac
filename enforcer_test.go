@@ -5,6 +5,7 @@ import (
 	"github.com/casbin/casbin"
 	"github.com/casbin/casbin/persist/file-adapter"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -281,6 +282,31 @@ func TestEnforcer_GetPermissionsForUser(t *testing.T) {
 	assert.Equal(t, "unknown", p.UnmatchedRestrictions[0].Owner)
 	assert.Equal(t, "random", p.UnmatchedRestrictions[0].Role)
 	assert.Equal(t, "*", p.UnmatchedRestrictions[0].UUID)
+}
+
+func TestEnforcer_GetPermissionsForUser_Filtered(t *testing.T) {
+	shouldBe := require.New(t)
+
+	enf := NewEnforcer()
+
+	enf.AddPolicy(Policy{"admin", "vendor", "game", "*", "any", "allow"})
+	role := Role{"stan", "admin", "vendor", "alise", []string{"50"}}
+	role2 := Role{"stan", "admin", "vendor", "david", []string{"51"}}
+	role3 := Role{"stan", "admin", "vendor", "greg", nil}
+	enf.AddRole(role)
+	enf.AddRole(role2)
+	enf.AddRole(role3)
+
+	userPermissions := enf.GetPermissionsForUser("stan", "vendor", "alise")
+	shouldBe.NotNil(userPermissions)
+	shouldBe.Equal("stan", userPermissions.User)
+	shouldBe.Equal("vendor", userPermissions.Domain)
+	shouldBe.Equal(0, len(userPermissions.UnmatchedRestrictions))
+	shouldBe.Equal(1, len(userPermissions.Permissions))
+	shouldBe.Equal("vendor", userPermissions.Permissions[0].Domain)
+	shouldBe.Equal("any", userPermissions.Permissions[0].Action)
+	shouldBe.Equal("game", userPermissions.Permissions[0].Resource)
+	shouldBe.Equal("admin", userPermissions.Permissions[0].Role)
 }
 
 func TestEnforcer_GetPermissionsForUserWithPermissions(t *testing.T) {

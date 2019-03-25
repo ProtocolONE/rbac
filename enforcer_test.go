@@ -154,6 +154,10 @@ func TestEnforcer_Enforce(t *testing.T) {
 	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
 	enf := NewEnforcer(a)
 
+	enf.AddRole(Role{Role: "admin", User: "superman", Domain: "vendor", Owner: "alise", RestrictedResourceId: []string{"*"}})
+	testEnforceSync(t, enf, "superman", "vendor", "games", "any", "another_owner", "read", false)
+	testEnforceSync(t, enf, "superman", "vendor", "games", "any", "alise", "read", true)
+
 	testEnforceSync(t, enf, "alise", "vendor", "any resource", "1", "alise", "read", true)
 	testEnforceSync(t, enf, "alise", "vendor", "any resource", "1", "alise", "write", true)
 	testEnforceSync(t, enf, "alise", "vendor", "any resource", "1", "max", "read", false)
@@ -195,6 +199,22 @@ func TestEnforcer_Enforce(t *testing.T) {
 	testEnforceSync(t, enf, "alex", "vendor", "price", "1", "alise", "write", false)
 	testEnforceSync(t, enf, "alex", "vendor", "statistic", "1", "alise", "write", true)
 	testEnforceSync(t, enf, "alex", "vendor", "statistic", "1", "alise", "write", true)
+}
+
+func TestEnforcer_Enforce2(t *testing.T) {
+	//shouldBe := require.New(t)
+	enf := NewEnforcer()
+
+	enf.AddPolicy(Policy{Role: "admin", Domain: "vendor", ResourceType: "game", ResourceId: "*", Action: "any", Effect: "allow"})
+	//enf.AddPolicy(Policy{Role: "admin", Domain: "vendor", ResourceType: "list", ResourceId: "skip", Action: "any", Effect: "allow"})
+
+	enf.AddRole(Role{Role: "admin", User: "superman", Domain: "vendor", Owner: "owner", RestrictedResourceId: nil})
+
+	//shouldBe.True(enf.Enforce(Context{Domain:"vendor", User:"superman", ResourceOwner:"owner", Action:"read", ResourceId: "*", Resource: "game"}))
+	//shouldBe.True(enf.Enforce(Context{Domain:"vendor", User:"superman", ResourceOwner:"owner", Action:"read", ResourceId: "*", Resource: "list"}))
+
+	//shouldBe.False(enf.Enforce(Context{Domain:"vendor", User:"superman", ResourceOwner:"another_owner", Action:"read", ResourceId: "*", Resource: "game"}))
+	//shouldBe.False(enf.Enforce(Context{Domain:"vendor", User:"superman", ResourceOwner:"another_owner", Action:"read", ResourceId: "*", Resource: "list"}))
 }
 
 func TestEnforcer_GetRolesForUser(t *testing.T) {

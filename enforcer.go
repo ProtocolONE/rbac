@@ -289,6 +289,10 @@ func (rm *Enforcer) GetUsersForRole(role string, domain string, filters ...inter
 	return filteredUsers
 }
 func (rm *Enforcer) passRestrictionFilter(r *Restriction, restrictionFilter *Restriction) bool {
+	if restrictionFilter == nil {
+		return true
+	}
+
 	if restrictionFilter.UUID != "" && restrictionFilter.UUID != r.UUID {
 		return false
 	}
@@ -404,8 +408,8 @@ func (rm *Enforcer) createUserRestriction(res string) *Restriction {
 
 func (rm *Enforcer) hasAccessToResource(args ...interface{}) (interface{}, error) {
 	pr := args[0].(Context)
-
 	res := rm.enforcer.GetFilteredNamedGroupingPolicy("g2", 0, pr.User)
+
 	if len(res) == 0 {
 		return true, nil
 	}

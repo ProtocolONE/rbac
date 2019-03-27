@@ -12,10 +12,10 @@ g = _, _, _
 g2 = _,_
 
 [policy_effect]
-e = some(where (p.eft == allow)) 
+e = some(where (p.eft == allow)) && !some(where (p.eft == deny))
 
 [matchers]
-m = (r.req.User == r.req.ResourceOwner) || \  
+m = (r.req.User == r.req.ResourceOwner && p.eft != "deny") || \  
 	( \
 		g(r.req.User, p.sub, r.req.Domain) && (p.domain == "*" || matchKeys(r.req.Domain, p.domain)) && \
 		(p.resource == "any" || matchKeys(r.req.Resource, p.resource)) && \		

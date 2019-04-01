@@ -405,6 +405,11 @@ func TestNewEnforcerWithWrongArguments(t *testing.T) {
 	}
 }
 
+func TestEnforcer_Save(t *testing.T) {
+	enf := NewEnforcer()
+	assert.Nil(t, enf.Save())
+}
+
 func testEnforceSync(t *testing.T, e *Enforcer, user, domain, obj, uuid, owner, action string, res bool) {
 	t.Helper()
 
@@ -432,3 +437,4 @@ func testGetUsersForRole(t *testing.T, e *Enforcer, users []string, role, domain
 
 	assert.ElementsMatch(t, users, e.GetUsersForRole(role, domain, filters...))
 }
+

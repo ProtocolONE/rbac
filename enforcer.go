@@ -373,6 +373,14 @@ func (rm *Enforcer) GetPermissionsForUser(user, domain string, filters ...interf
 	return &up
 }
 
+func (rm *Enforcer) Save() error {
+	if rm.enforcer.GetAdapter() == nil {
+		return nil
+	}
+
+	return rm.enforcer.SavePolicy()
+}
+
 func (rm *Enforcer) buildPermissions(subjects []string, domain string) []*UserPermission {
 	var permissions []*UserPermission
 

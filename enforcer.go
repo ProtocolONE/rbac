@@ -177,7 +177,7 @@ func (rm *Enforcer) AddPolicy(p Policy) bool {
 		p.ResourceId,
 		p.Action,
 		p.Effect,
-	)
+	) && rm.Save() == nil
 }
 
 // RemovePolicy removes an authorization rule from the current policy.
@@ -189,21 +189,21 @@ func (rm *Enforcer) RemovePolicy(p Policy) bool {
 		p.ResourceId,
 		p.Action,
 		p.Effect,
-	)
+	) && rm.Save() == nil
 }
 
 // LinkRoles adds a role inheritance rule to the current policy in domain.
 // If the rule already exists, the function returns false and the rule will not be added.
 // Otherwise the function returns true by adding the new rule.
 func (rm *Enforcer) LinkRoles(role1, role2, domain string) bool {
-	return rm.enforcer.AddGroupingPolicy(role1, role2, domain)
+	return rm.enforcer.AddGroupingPolicy(role1, role2, domain) && rm.Save() == nil
 }
 
 // UnlinkRoles removes a role inheritance rule from the current policy in domain.
 // If the rule not exists, the function returns false and the rule will not be deleted.
 // Otherwise the function returns true by deleting the rule.
 func (rm *Enforcer) UnlinkRoles(role1, role2, domain string) bool {
-	return rm.enforcer.RemoveGroupingPolicy(role1, role2, domain)
+	return rm.enforcer.RemoveGroupingPolicy(role1, role2, domain) && rm.Save() == nil
 }
 
 // HasLink determines whether a role inheritance rule exists.
@@ -218,7 +218,7 @@ func (rm *Enforcer) AddRole(rr Role) bool {
 		rm.AddRestrictionToUser(rr.User, &Restriction{rr.Owner, rr.Role, r})
 	}
 
-	return rm.enforcer.AddRoleForUserInDomain(rr.User, rr.Role, rr.Domain)
+	return rm.enforcer.AddRoleForUserInDomain(rr.User, rr.Role, rr.Domain) && rm.Save() == nil
 }
 
 // RemoveRole deletes a role for a user inside a domain.
@@ -227,7 +227,7 @@ func (rm *Enforcer) RemoveRole(rr Role) bool {
 	for _, r := range rr.RestrictedResourceId {
 		rm.RemoveRestrictionFromUser(rr.User, &Restriction{rr.Owner, rr.Role, r})
 	}
-	return rm.enforcer.DeleteRoleForUserInDomain(rr.User, rr.Role, rr.Domain)
+	return rm.enforcer.DeleteRoleForUserInDomain(rr.User, rr.Role, rr.Domain) && rm.Save() == nil
 }
 
 // DeleteUser deletes a user.
@@ -242,12 +242,12 @@ func (rm *Enforcer) DeleteUser(user string) bool {
 // have full access to all resources in domain. This restrictions allow to restrict access just for
 // given resources.
 func (rm *Enforcer) AddRestrictionToUser(user string, r *Restriction) bool {
-	return rm.enforcer.AddNamedGroupingPolicy("g2", user, r.GetRaw())
+	return rm.enforcer.AddNamedGroupingPolicy("g2", user, r.GetRaw()) && rm.Save() == nil
 }
 
 // RemoveRestrictionFromUser removes a role inheritance rule from the `g2` named policy.
 func (rm *Enforcer) RemoveRestrictionFromUser(user string, r *Restriction) bool {
-	return rm.enforcer.RemoveNamedGroupingPolicy("g2", user, r.GetRaw())
+	return rm.enforcer.RemoveNamedGroupingPolicy("g2", user, r.GetRaw()) && rm.Save() == nil
 }
 
 // GetUserRestrictions return unassigned list of restrictions

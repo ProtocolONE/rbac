@@ -80,8 +80,8 @@ func TestRole(t *testing.T) {
 	testRole(t, rm, "u4", "g2", true)
 	testRole(t, rm, "u4", "g3", true)
 
-	testPrintRoles(t, rm, "u1", []string{"g1"})
-	testPrintRoles(t, rm, "u2", []string{"g1"})
+	testPrintRoles(t, rm, "u1", []string{"g1", "g3"})
+	testPrintRoles(t, rm, "u2", []string{"g1", "g3"})
 	testPrintRoles(t, rm, "u3", []string{"g2"})
 	testPrintRoles(t, rm, "u4", []string{"g2", "g3"})
 	testPrintRoles(t, rm, "g1", []string{"g3"})

@@ -147,7 +147,7 @@ func TestEnforcer_EnforceWithPermissions(t *testing.T) {
 
 	testEnforceSync(t, enf, "fred", "vendor", "games", "1", "alise", "read", false)
 	testEnforceSync(t, enf, "fred", "vendor", "social", "1", "alise", "read", false)
-	testEnforceSync(t, enf, "fred", "vendor", "statistic", "1", "alise", "read", true)
+	testEnforceSync(t, enf, "fred", "vendor", "statistic", "5", "alise", "read", true)
 }
 
 func TestEnforcer_Enforce(t *testing.T) {
@@ -221,9 +221,9 @@ func TestEnforcer_GetRolesForUser(t *testing.T) {
 	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
 	enf := NewEnforcer(a)
 
-	testGetRoleForUser(t, enf, []string{"admin"}, "max", "vendor")
+	testGetRoleForUser(t, enf, []string{"admin", "viewer", "analytic"}, "max", "vendor")
 	testGetRoleForUser(t, enf, []string{"viewer", "analytic"}, "ted", "vendor")
-	testGetRoleForUser(t, enf, []string{"admin"}, "tony", "vendor")
+	testGetRoleForUser(t, enf, []string{"admin", "viewer", "analytic"}, "tony", "vendor")
 
 	testGetRoleForUser(t, enf, []string{}, "max", "vendor1")
 	testGetRoleForUser(t, enf, []string{}, "ted", "vendor1")
@@ -247,16 +247,16 @@ func TestEnforcer_GetUsersForRole(t *testing.T) {
 	testGetUsersForRole(t, enf, []string{}, "admin", "vendor", "frenc")
 	testGetUsersForRole(t, enf, []string{}, "admin", "vendor", "alise", "role")
 	testGetUsersForRole(t, enf, []string{}, "admin", "vendor", "alise", "admin", "1")
-	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor")
-	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", "alise")
-	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", "alise", "admin")
+	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor")
+	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", "alise")
+	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", "alise", "admin")
 
-	testGetUsersForRole(t, enf, []string{"max"}, "admin", "vendor", "alise", "admin", "*")
+	testGetUsersForRole(t, enf, []string{"max", "superman"}, "admin", "vendor", "alise", "admin", "*")
 	testGetUsersForRole(t, enf, []string{"tony"}, "admin", "vendor", "alise", "admin", "42")
 
-	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", &Restriction{Owner: "alise"})
-	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin"})
-	testGetUsersForRole(t, enf, []string{"max"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin", UUID: "*"})
+	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", &Restriction{Owner: "alise"})
+	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin"})
+	testGetUsersForRole(t, enf, []string{"max", "superman"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin", UUID: "*"})
 	testGetUsersForRole(t, enf, []string{"tony"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin", UUID: "42"})
 
 	assert.Panics(t, func() {
@@ -274,7 +274,7 @@ func TestEnforcer_GetPermissionsForUser(t *testing.T) {
 	assert.Equal(t, "max", p.User)
 	assert.Equal(t, "vendor", p.Domain)
 
-	assert.Len(t, p.Permissions, 2)
+	assert.Len(t, p.Permissions, 4)
 
 	assert.Equal(t, "admin", p.Permissions[0].Role)
 	assert.Equal(t, "vendor", p.Permissions[0].Domain)
@@ -346,10 +346,10 @@ func TestEnforcer_GetPermissionsForUserWithPermissions(t *testing.T) {
 	assert.Equal(t, "", p.Permissions[0].Restrictions[0].UUID)
 
 	p = enf.GetPermissionsForUser("fred", "vendor")
-	assert.Equal(t, "alise/analytic/*", p.Permissions[0].Restrictions[0].GetRaw())
+	assert.Equal(t, "alise/analytic/5", p.Permissions[0].Restrictions[0].GetRaw())
 	assert.Equal(t, "alise", p.Permissions[0].Restrictions[0].Owner)
 	assert.Equal(t, "analytic", p.Permissions[0].Restrictions[0].Role)
-	assert.Equal(t, "*", p.Permissions[0].Restrictions[0].UUID)
+	assert.Equal(t, "5", p.Permissions[0].Restrictions[0].UUID)
 
 	assert.Panics(t, func() {
 		enf.GetPermissionsForUser("panic", "vendor")
@@ -435,6 +435,7 @@ func testGetRoleForUser(t *testing.T, e *Enforcer, roles []string, user, domain 
 func testGetUsersForRole(t *testing.T, e *Enforcer, users []string, role, domain string, filters ...interface{}) {
 	t.Helper()
 
-	assert.ElementsMatch(t, users, e.GetUsersForRole(role, domain, filters...))
+	usersMatch := e.GetUsersForRole(role, domain, filters...)
+	assert.ElementsMatch(t, users, usersMatch)
 }
 

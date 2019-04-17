@@ -296,6 +296,9 @@ func (r *RbacRole) getRoles() []string {
 	names := []string{}
 	for _, role := range r.roles {
 		names = append(names, role.name)
+		for _, innerRole := range role.getRoles() {
+			names = append(names, innerRole)
+		}
 	}
 	return names
 }

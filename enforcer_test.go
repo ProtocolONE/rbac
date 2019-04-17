@@ -346,10 +346,10 @@ func TestEnforcer_GetPermissionsForUserWithPermissions(t *testing.T) {
 	assert.Equal(t, "", p.Permissions[0].Restrictions[0].UUID)
 
 	p = enf.GetPermissionsForUser("fred", "vendor")
-	assert.Equal(t, "alise/analytic/5", p.Permissions[0].Restrictions[0].GetRaw())
+	assert.Equal(t, "alise/analytic/*", p.Permissions[0].Restrictions[0].GetRaw())
 	assert.Equal(t, "alise", p.Permissions[0].Restrictions[0].Owner)
 	assert.Equal(t, "analytic", p.Permissions[0].Restrictions[0].Role)
-	assert.Equal(t, "5", p.Permissions[0].Restrictions[0].UUID)
+	assert.Equal(t, "*", p.Permissions[0].Restrictions[0].UUID)
 
 	assert.Panics(t, func() {
 		enf.GetPermissionsForUser("panic", "vendor")

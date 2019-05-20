@@ -6,6 +6,8 @@ import (
 	"github.com/casbin/casbin/persist/file-adapter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
+	"os"
 	"testing"
 )
 
@@ -134,7 +136,8 @@ func TestEnforcer_DeleteUser(t *testing.T) {
 }
 
 func TestEnforcer_EnforceWithPermissions(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/restrict_policy.csv")
+	Copy("./conf/restrict_policy.csv", "./conf/copy_restrict_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_restrict_policy.csv")
 	enf := NewEnforcer(a)
 
 	testEnforceSync(t, enf, "max", "vendor", "games", "1", "alise", "read", true)
@@ -151,7 +154,8 @@ func TestEnforcer_EnforceWithPermissions(t *testing.T) {
 }
 
 func TestEnforcer_Enforce(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
+	Copy("./conf/keymatch_policy.csv", "./conf/copy_keymatch_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_keymatch_policy.csv")
 	enf := NewEnforcer(a)
 
 	enf.AddRole(Role{Role: "admin", User: "superman", Domain: "vendor", Owner: "alise", RestrictedResourceId: []string{"*"}})
@@ -218,7 +222,8 @@ func TestEnforcer_Enforce2(t *testing.T) {
 }
 
 func TestEnforcer_GetRolesForUser(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
+	Copy("./conf/keymatch_policy.csv", "./conf/copy_keymatch_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_keymatch_policy.csv")
 	enf := NewEnforcer(a)
 
 	testGetRoleForUser(t, enf, []string{"admin", "viewer", "analytic"}, "max", "vendor")
@@ -235,7 +240,8 @@ func TestEnforcer_GetRolesForUser(t *testing.T) {
 }
 
 func TestEnforcer_GetUsersForRole(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
+	Copy("./conf/keymatch_policy.csv", "./conf/copy_keymatch_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_keymatch_policy.csv")
 	enf := NewEnforcer(a)
 
 	testGetUsersForRole(t, enf, []string{"nick"}, "admin2", "any domain")
@@ -247,16 +253,16 @@ func TestEnforcer_GetUsersForRole(t *testing.T) {
 	testGetUsersForRole(t, enf, []string{}, "admin", "vendor", "frenc")
 	testGetUsersForRole(t, enf, []string{}, "admin", "vendor", "alise", "role")
 	testGetUsersForRole(t, enf, []string{}, "admin", "vendor", "alise", "admin", "1")
-	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor")
-	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", "alise")
-	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", "alise", "admin")
+	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor")
+	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", "alise")
+	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", "alise", "admin")
 
-	testGetUsersForRole(t, enf, []string{"max", "superman"}, "admin", "vendor", "alise", "admin", "*")
+	testGetUsersForRole(t, enf, []string{"max"}, "admin", "vendor", "alise", "admin", "*")
 	testGetUsersForRole(t, enf, []string{"tony"}, "admin", "vendor", "alise", "admin", "42")
 
-	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", &Restriction{Owner: "alise"})
-	testGetUsersForRole(t, enf, []string{"max", "tony", "superman"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin"})
-	testGetUsersForRole(t, enf, []string{"max", "superman"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin", UUID: "*"})
+	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", &Restriction{Owner: "alise"})
+	testGetUsersForRole(t, enf, []string{"max", "tony"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin"})
+	testGetUsersForRole(t, enf, []string{"max"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin", UUID: "*"})
 	testGetUsersForRole(t, enf, []string{"tony"}, "admin", "vendor", &Restriction{Owner: "alise", Role: "admin", UUID: "42"})
 
 	assert.Panics(t, func() {
@@ -266,7 +272,8 @@ func TestEnforcer_GetUsersForRole(t *testing.T) {
 }
 
 func TestEnforcer_GetPermissionsForUser(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
+	Copy("./conf/keymatch_policy.csv", "./conf/copy_keymatch_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_keymatch_policy.csv")
 	enf := NewEnforcer(a)
 
 	p := enf.GetPermissionsForUser("max", "vendor")
@@ -330,7 +337,8 @@ func TestEnforcer_GetPermissionsForUser_Filtered(t *testing.T) {
 }
 
 func TestEnforcer_GetPermissionsForUserWithPermissions(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/restrict_policy.csv")
+	Copy("./conf/restrict_policy.csv", "./conf/copy_restrict_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_restrict_policy.csv")
 	enf := NewEnforcer(a)
 
 	p := enf.GetPermissionsForUser("max", "vendor")
@@ -357,7 +365,8 @@ func TestEnforcer_GetPermissionsForUserWithPermissions(t *testing.T) {
 }
 
 func TestEnforcer_RemoveResourceRestrictionForUser(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/restrict_policy.csv")
+	Copy("./conf/restrict_policy.csv", "./conf/copy_restrict_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_restrict_policy.csv")
 	enf := NewEnforcer(a)
 
 	for _, r := range enf.GetUserRestrictions("fred") {
@@ -379,7 +388,8 @@ func TestNewEnforcer(t *testing.T) {
 		assert.IsType(t, &Enforcer{}, NewEnforcer(casbin.NewSyncedEnforcer()))
 	})
 
-	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
+	Copy("./conf/keymatch_policy.csv", "./conf/copy_keymatch_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_keymatch_policy.csv")
 	w := &rediswatcher.Watcher{}
 
 	assert.NotPanics(t, func() {
@@ -388,7 +398,8 @@ func TestNewEnforcer(t *testing.T) {
 }
 
 func TestNewEnforcerWithWrongArguments(t *testing.T) {
-	a := fileadapter.NewAdapter("./conf/keymatch_policy.csv")
+	Copy("./conf/keymatch_policy.csv", "./conf/copy_keymatch_policy.csv")
+	a := fileadapter.NewAdapter("./conf/copy_keymatch_policy.csv")
 	w := &rediswatcher.Watcher{}
 
 	set := [][]interface{}{
@@ -439,3 +450,24 @@ func testGetUsersForRole(t *testing.T, e *Enforcer, users []string, role, domain
 	assert.ElementsMatch(t, users, usersMatch)
 }
 
+// Copy the src file to dst. Any existing file will be overwritten and will not
+// copy file attributes.
+func Copy(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+	return out.Close()
+}

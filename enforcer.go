@@ -214,20 +214,25 @@ func (rm *Enforcer) HasLink(role1, role2, domain string) bool {
 // AddRole adds a role for a user inside a domain with given permissions.
 // Returns false if the user already has the role (aka not affected).
 func (rm *Enforcer) AddRole(rr Role) bool {
+	restrict := true
 	for _, r := range rr.RestrictedResourceId {
-		rm.AddRestrictionToUser(rr.User, &Restriction{rr.Owner, rr.Role, r})
+		restrict = restrict && rm.AddRestrictionToUser(rr.User, &Restriction{rr.Owner, rr.Role, r})
 	}
 
-	return rm.enforcer.AddRoleForUserInDomain(rr.User, rr.Role, rr.Domain) && rm.Save() == nil
+	addRoleG1 := rm.enforcer.AddRoleForUserInDomain(rr.User, rr.Role, rr.Domain)
+	return (restrict || addRoleG1) && rm.Save() == nil
 }
 
 // RemoveRole deletes a role for a user inside a domain.
 // Returns false if the user does not have the role (aka not affected).
 func (rm *Enforcer) RemoveRole(rr Role) bool {
+	restrict := true
 	for _, r := range rr.RestrictedResourceId {
-		rm.RemoveRestrictionFromUser(rr.User, &Restriction{rr.Owner, rr.Role, r})
+		restrict = restrict && rm.RemoveRestrictionFromUser(rr.User, &Restriction{rr.Owner, rr.Role, r})
 	}
-	return rm.enforcer.DeleteRoleForUserInDomain(rr.User, rr.Role, rr.Domain) && rm.Save() == nil
+
+	removeRoleG1 := rm.enforcer.DeleteRoleForUserInDomain(rr.User, rr.Role, rr.Domain)
+	return (restrict || removeRoleG1) && rm.Save() == nil
 }
 
 // DeleteUser deletes a user.

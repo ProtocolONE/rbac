@@ -83,8 +83,8 @@ func TestEnforcer_AddRole(t *testing.T) {
 	enf.AddPolicy(Policy{"support", "vendor", "posts", "skip", "any", "allow"})
 	enf.LinkRoles("admin", "support", "vendor")
 
-	enf.AddRole(Role{"stan", "admin", "vendor", "alise", []string{"50"}})
-	enf.AddRole(Role{"brad", "support", "vendor", "alise", []string{"10"}})
+	assert.True(t, enf.AddRole(Role{"stan", "admin", "vendor", "alise", []string{"50"}}))
+	assert.True(t, enf.AddRole(Role{"brad", "support", "vendor", "alise", []string{"10"}}))
 
 	testEnforceSync(t, enf, "stan", "vendor", "game", "1", "alise", "read", false)
 	testEnforceSync(t, enf, "stan", "vendor", "events", "1", "alise", "read", false)
@@ -105,6 +105,9 @@ func TestEnforcer_AddRole(t *testing.T) {
 	testEnforceSync(t, enf, "stan", "vendor", "posts", "1", "alise", "write", true)
 	testEnforceSync(t, enf, "brad", "vendor", "posts", "1", "alise", "read", true)
 	testEnforceSync(t, enf, "brad", "vendor", "posts", "1", "alise", "read", true)
+
+	assert.True(t, enf.AddRole(Role{"roman", "support", "vendor", "alise", []string{"*"}}))
+	assert.True(t, enf.AddRole(Role{"roman", "support", "vendor", "brad", []string{"*"}}))
 }
 
 func TestEnforcer_RemoveRole(t *testing.T) {
